@@ -6,7 +6,13 @@ const cron = require('node-cron');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
+// CORS sozlamalari - MUHIM!
+app.use(cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 app.use(express.json());
 app.use(express.static('public'));
 
@@ -179,7 +185,7 @@ setTimeout(() => {
     }
 }, 2000);
 
-// ============ ASOSIY YO'NALISH (ROOT) ============
+// ============ ASOSIY YO'NALISH ============
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/public/admin.html');
 });
