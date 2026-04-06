@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Simulyatsion markazi - Displey</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Roboto', 'Poppins', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a472a 0%, #2c3e8f 100%);
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+        }
+
+        /* Dekorativ fon to'lqinlari (xitoycha yozuvsiz) */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="rgba(255,255,255,0.05)" fill-opacity="1" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,122.7C672,117,768,139,864,154.7C960,171,1056,181,1152,165.3C1248,149,1344,107,1392,85.3L1440,64L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>') repeat-x bottom;
+            background-size: cover;
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* LOGIN */
+        .login-container {
+            background: white;
+            border-radius: 30px;
+            padding: 40px;
+            width: 400px;
+            margin: 100px auto;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .main-container { display: none; }
+        .login-container input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        .login-container button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #1a472a 0%, #2c3e8f 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .error { color: red; margin-top: 10px; }
+
+        /* HEADER */
+        .university-header {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 30px;
+            padding: 20px 35px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 5px solid #2c3e8f;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .logo-img {
+            width: 70px;
+            height: 70px;
+            object-fit: contain;
+            border-radius: 15px;
+            background: white;
+            padding: 5px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .university-text {
+            text-align: left;
+        }
+
+        .university-name {
+            font-size: 24px;
+            font-weight: 800;
+            color: #1a472a;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .university-sub {
+            font-size: 13px;
+            color: #2c3e8f;
+            font-weight: 600;
+        }
+
+        .date-time-section {
+            text-align: right;
+            background: linear-gradient(135deg, #1a472a 0%, #2c3e8f 100%);
+            padding: 12px 20px;
+            border-radius: 20px;
+            color: white;
+        }
+
+        .current-date {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .current-time {
+            font-size: 24px;
+            font-weight: 700;
+            font-family: monospace;
+        }
+
+        /* MODE BUTTONS */
+        .mode-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .mode-btn {
+            padding: 15px 40px;
+            font-size: 20px;
+            font-weight: bold;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .mode-btn.today {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+        }
+
+        .mode-btn.week {
+            background: linear-gradient(135deg, #2980b9 0%, #3498db 100%);
+            color: white;
+        }
+
+        .mode-btn.active {
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            border: 2px solid #fff;
+        }
+
+        .mode-btn:hover {
+            transform: translateY(-3px);
+        }
+
+        /* CONTENT */
+        .content {
+            background: rgba(255,255,255,0.95);
+            border-radius: 30px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            min-height: 500px;
+        }
+
+        .schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 18px;
+            border-radius: 20px;
+            overflow: hidden;
+            margin-bottom: 25px;
+        }
+
+        .schedule-table thead {
+            background: linear-gradient(135deg, #1a472a 0%, #2c3e8f 100%);
+        }
+
+        .schedule-table th {
+            color: white;
+            padding: 18px 15px;
+            font-size: 18px;
+            font-weight: 600;
+            text-align: left;
+        }
+
+        .schedule-table td {
+            padding: 15px;
+            border-bottom: 1px solid #e0e0e0;
+            color: #333;
+        }
+
+        .schedule-table tbody tr:hover {
+            background: #f0f8ff;
+        }
+
+        .week-navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .week-nav-btn {
+            background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .week-nav-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .week-date {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1a472a;
+            background: #ecf0f1;
+            padding: 8px 20px;
+            border-radius: 30px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px;
+            font-size: 24px;
+            color: #95a5a6;
+        }
+
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            color: white;
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .auto-refresh {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-family: monospace;
+            z-index: 10;
+        }
+
+        .logout-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .header-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 1024px) {
+            .university-name { font-size: 18px; }
+            .logo-img { width: 50px; height: 50px; }
+            .mode-btn { padding: 10px 25px; font-size: 16px; }
+            .schedule-table th, .schedule-table td { font-size: 14px; padding: 10px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="login-container" id="loginContainer">
+        <img src="logo.png" class="logo-img" onerror="this.style.display='none'" style="margin:0 auto 15px auto; display:block;">
+        <h2 style="color:#1a472a;">🏥 SIMULYATSION MARKAZI</h2>
+        <h3>Displeyga kirish</h3>
+        <input type="text" id="username" placeholder="Username">
+        <input type="password" id="password" placeholder="Parol">
+        <button onclick="login()">Kirish</button>
+        <div id="loginError" class="error"></div>
+    </div>
+
+    <div class="main-container" id="mainContainer">
+        <div class="header-flex">
+            <div class="university-header" style="flex:1; margin-bottom:0;">
+                <div class="logo-section">
+                    <img src="logo.png" class="logo-img" onerror="this.style.display='none'">
+                    <div class="university-text">
+                        <div class="university-name">🏥 TOSHKENT DAVLAT TIBBIYOT UNIVERSITETI</div>
+                        <div class="university-sub">Simulyatsion markazi | Laboratoriya xonalari jadvali</div>
+                    </div>
+                </div>
+                <div class="date-time-section">
+                    <div class="current-date" id="currentDate"></div>
+                    <div class="current-time" id="currentTime"></div>
+                </div>
+            </div>
+            <button class="logout-btn" onclick="logout()">🚪 Chiqish</button>
+        </div>
+
+        <div class="mode-buttons">
+            <button class="mode-btn today active" onclick="switchMode('today')">📅 BUGUNGI KUN</button>
+            <button class="mode-btn week" onclick="switchMode('week')">📆 BUTUN HAFTA</button>
+        </div>
+
+        <div class="content" id="content">
+            <div class="empty-state">⏳ Yuklanmoqda...</div>
+        </div>
+
+        <div class="footer">
+            <span>© Toshkent Davlat Tibbiyot Universiteti | Simulyatsion markazi</span>
+        </div>
+    </div>
+</div>
+
+<div class="auto-refresh" id="refreshStatus">🔄 Yangilanmoqda...</div>
+
+<script>
+    let currentMode = 'today';
+    let currentWeekStart = null;
+    let refreshInterval = null;
+    const API_URL = 'http://localhost:3000/api';
+    const weekDays = ['Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba', 'Yakshanba'];
+
+    function maskPhone(phone) {
+        if (!phone || phone.length < 4) return phone || '-';
+        return '*'.repeat(phone.length - 4) + phone.slice(-4);
+    }
+
+    function updateDateTime() {
+        const now = new Date();
+        document.getElementById('currentDate').innerHTML = now.toLocaleDateString('uz-UZ', {year:'numeric', month:'long', day:'numeric'});
+        document.getElementById('currentTime').innerHTML = now.toLocaleTimeString('uz-UZ', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+    }
+
+    function login() {
+        const u = document.getElementById('username').value;
+        const p = document.getElementById('password').value;
+        if (u === 'display' && p === 'display123') {
+            document.getElementById('loginContainer').style.display = 'none';
+            document.getElementById('mainContainer').style.display = 'block';
+            updateDateTime();
+            setInterval(updateDateTime, 1000);
+            loadTodaySchedule();
+            startAutoRefresh();
+        } else {
+            document.getElementById('loginError').innerText = '❌ Login yoki parol xato!';
+        }
+    }
+
+    function logout() {
+        document.getElementById('loginContainer').style.display = 'block';
+        document.getElementById('mainContainer').style.display = 'none';
+        if (refreshInterval) clearInterval(refreshInterval);
+    }
+
+    function getWeekStart(date = new Date()) {
+        const d = new Date(date);
+        const day = d.getDay();
+        const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+        return new Date(d.setDate(diff));
+    }
+
+    function formatDate(date) {
+        return date.toLocaleDateString('uz-UZ', {year:'numeric', month:'long', day:'numeric'});
+    }
+
+    async function loadTodaySchedule() {
+        try {
+            const res = await fetch(`${API_URL}/today-schedule`);
+            const data = await res.json();
+            if (data.length === 0) {
+                document.getElementById('content').innerHTML = '<div class="empty-state">📭 Bugungi kun uchun jadval mavjud emas</div>';
+                return;
+            }
+            let html = `<table class="schedule-table"><thead><tr><th>⏰ VAQT</th><th>🚪 XONA</th><th>👨‍⚕️ O'QITUVCHI</th><th>📞 TELEFON</th></tr></thead><tbody>`;
+            data.forEach(s => {
+                html += `<tr>
+                    <td><strong>${s.start_time} - ${s.end_time}</strong></td>
+                    <td>🏛️ ${s.room_name}</td>
+                    <td>👨‍🏫 ${s.teacher_name}</td>
+                    <td>📱 ${maskPhone(s.phone)}</td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            document.getElementById('content').innerHTML = html;
+        } catch(e) {
+            document.getElementById('content').innerHTML = '<div class="empty-state">⚠️ Xatolik yuz berdi</div>';
+        }
+    }
+
+    async function loadWeekSchedule() {
+        try {
+            if (!currentWeekStart) currentWeekStart = getWeekStart(new Date());
+            const weekStr = currentWeekStart.toISOString().split('T')[0];
+            const res = await fetch(`${API_URL}/schedule?week_start=${weekStr}`);
+            const data = await res.json();
+            const weekEnd = new Date(currentWeekStart);
+            weekEnd.setDate(weekEnd.getDate() + 6);
+            
+            if (data.length === 0) {
+                document.getElementById('content').innerHTML = '<div class="empty-state">📭 Bu hafta uchun jadval mavjud emas</div>';
+                return;
+            }
+            
+            let byDay = {};
+            for (let i = 1; i <= 7; i++) byDay[i] = [];
+            data.forEach(s => { if (byDay[s.day_of_week]) byDay[s.day_of_week].push(s); });
+            for (let d in byDay) byDay[d].sort((a,b) => a.start_time.localeCompare(b.start_time));
+            
+            let html = `<div class="week-navigation">
+                <button class="week-nav-btn" onclick="changeWeek(-1)">◀ Oldingi hafta</button>
+                <div class="week-date">📆 ${formatDate(currentWeekStart)} - ${formatDate(weekEnd)}</div>
+                <button class="week-nav-btn" onclick="changeWeek(1)">Keyingi hafta ▶</button>
+            </div>`;
+            
+            for (let i = 1; i <= 7; i++) {
+                if (byDay[i] && byDay[i].length > 0) {
+                    html += `<table class="schedule-table">
+                        <thead><tr style="background:#ecf0f1;"><th colspan="4" style="font-size:20px; color:#1a472a;">📌 ${weekDays[i-1]}</th></tr>
+                        <tr><th>⏰ VAQT</th><th>🚪 XONA</th><th>👨‍⚕️ O'QITUVCHI</th><th>📞 TELEFON</th></tr></thead>
+                        <tbody>`;
+                    byDay[i].forEach(s => {
+                        html += `<tr>
+                            <td>${s.start_time} - ${s.end_time}</td>
+                            <td>🏛️ ${s.room_name}</td>
+                            <td>👨‍🏫 ${s.teacher_name}</td>
+                            <td>📱 ${maskPhone(s.phone)}</td>
+                        </tr>`;
+                    });
+                    html += '</tbody></table><br>';
+                }
+            }
+            document.getElementById('content').innerHTML = html;
+        } catch(e) {
+            document.getElementById('content').innerHTML = '<div class="empty-state">⚠️ Xatolik yuz berdi</div>';
+        }
+    }
+
+    function changeWeek(delta) {
+        if (currentWeekStart) {
+            currentWeekStart.setDate(currentWeekStart.getDate() + (delta * 7));
+            loadWeekSchedule();
+        }
+    }
+
+    function switchMode(mode) {
+        currentMode = mode;
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+        if (mode === 'today') {
+            document.querySelector('.mode-btn.today').classList.add('active');
+            currentWeekStart = null;
+            loadTodaySchedule();
+        } else {
+            document.querySelector('.mode-btn.week').classList.add('active');
+            if (!currentWeekStart) currentWeekStart = getWeekStart(new Date());
+            loadWeekSchedule();
+        }
+    }
+
+    function startAutoRefresh() {
+        if (refreshInterval) clearInterval(refreshInterval);
+        refreshInterval = setInterval(() => {
+            if (currentMode === 'today') loadTodaySchedule();
+            else loadWeekSchedule();
+            const now = new Date();
+            document.getElementById('refreshStatus').innerHTML = `🔄 ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
+        }, 30000);
+    }
+</script>
+</body>
+</html>

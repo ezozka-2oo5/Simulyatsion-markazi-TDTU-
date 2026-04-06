@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulyatsion markazi - Admin panel</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        
+        .login-container {
+            background: white;
+            border-radius: 30px;
+            padding: 40px;
+            width: 400px;
+            margin: 100px auto;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .main-container { display: none; }
+        .login-container input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        .login-container button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #1a472a 0%, #2c3e8f 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .error { color: red; margin-top: 10px; }
+        
+        .header-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .logo-img { width: 50px; height: 50px; object-fit: contain; vertical-align: middle; margin-right: 15px; }
+        .header-title h1 { color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); display: inline-block; font-size: 28px; }
+        .logout-btn { background: #e74c3c; color: white; padding: 10px 25px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            background: white;
+            padding: 10px;
+            border-radius: 15px;
+            flex-wrap: wrap;
+        }
+        .tab {
+            padding: 12px 28px;
+            background: #e0e0e0;
+            border: none;
+            cursor: pointer;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .tab.active { background: linear-gradient(135deg, #2c3e8f 0%, #3498db 100%); color: white; }
+        
+        .tab-content { display: none; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        .tab-content.active { display: block; }
+        
+        .btn-add { background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%); color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-bottom: 20px; }
+        .btn-edit { background: #ff9800; color: white; padding: 5px 12px; border: none; border-radius: 5px; cursor: pointer; margin: 2px; }
+        .btn-delete { background: #f44336; color: white; padding: 5px 12px; border: none; border-radius: 5px; cursor: pointer; margin: 2px; }
+        .btn-sms { background: #2196F3; color: white; padding: 5px 12px; border: none; border-radius: 5px; cursor: pointer; margin: 2px; }
+        .btn-copy { background: #9c27b0; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        
+        .week-selector { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
+        .week-selector input { padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; border-radius: 12px; overflow: hidden; }
+        th { background: linear-gradient(135deg, #2c3e8f 0%, #3498db 100%); color: white; padding: 14px; text-align: left; }
+        td { padding: 12px; border-bottom: 1px solid #e0e0e0; }
+        tr:hover { background: #f5f5f5; }
+        
+        .status-sent { background: #27ae60; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; display: inline-block; }
+        .status-pending { background: #f39c12; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; display: inline-block; }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: white; padding: 30px; border-radius: 20px; width: 500px; max-width: 90%; }
+        .modal-content label { display: block; margin-top: 12px; margin-bottom: 5px; font-weight: bold; color: #333; }
+        .modal-content input, .modal-content select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
+        .modal-content button { margin-top: 15px; margin-right: 10px; padding: 8px 20px; cursor: pointer; border: none; border-radius: 5px; font-weight: bold; }
+        
+        .settings-section { margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #ddd; }
+        .settings-section h4 { margin-bottom: 15px; color: #2c3e8f; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="login-container" id="loginContainer">
+        <img src="logo.png" class="logo-img" onerror="this.style.display='none'" style="width:70px; height:70px; margin-bottom:15px;">
+        <h2 style="color:#2c3e8f;">🏥 SIMULYATSION MARKAZI</h2>
+        <h3>Admin panelga kirish</h3>
+        <input type="text" id="username" placeholder="Username">
+        <input type="password" id="password" placeholder="Parol">
+        <button onclick="login()">Kirish</button>
+        <div id="loginError" class="error"></div>
+    </div>
+
+    <div class="main-container" id="mainContainer">
+        <div class="header-title">
+            <div>
+                <img src="logo.png" class="logo-img" onerror="this.style.display='none'">
+                <h1>🏥 SIMULYATSION MARKAZI</h1>
+                <span style="color:white; margin-left:15px;">Admin panel</span>
+            </div>
+            <button class="logout-btn" onclick="logout()">🚪 Chiqish</button>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('schedule')">📅 Haftalik jadval</button>
+            <button class="tab" onclick="showTab('rooms')">🚪 Xonalar</button>
+            <button class="tab" onclick="showTab('teachers')">👨‍🏫 O'qituvchilar</button>
+            <button class="tab" onclick="showTab('settings')">⚙️ Sozlamalar</button>
+        </div>
+
+        <div id="schedule" class="tab-content active">
+            <div class="week-selector">
+                <label>📆 Hafta:</label>
+                <input type="date" id="weekStart" onchange="loadSchedule()">
+                <button class="btn-copy" onclick="copyWeek()">📋 Nusxalash</button>
+                <button class="btn-add" onclick="showModal('schedule')">+ Yangi yozuv</button>
+                <button class="btn-add" style="background:#e67e22;" onclick="sendAllMessages()">📨 Xabar yuborish</button>
+            </div>
+            <div id="scheduleList"></div>
+        </div>
+
+        <div id="rooms" class="tab-content">
+            <button class="btn-add" onclick="showModal('room')">+ Yangi xona</button>
+            <div id="roomsList"></div>
+        </div>
+
+        <div id="teachers" class="tab-content">
+            <button class="btn-add" onclick="showModal('teacher')">+ Yangi o'qituvchi</button>
+            <div id="teachersList"></div>
+        </div>
+
+        <div id="settings" class="tab-content">
+            <div class="settings-section">
+                <h4>🌐 Til sozlamalari</h4>
+                <div class="form-group">
+                    <label>Interfeys tili:</label>
+                    <select id="languageSelect" onchange="changeLanguage()">
+                        <option value="uz">🇺🇿 O'zbekcha</option>
+                        <option value="ru">🇷🇺 Русский</option>
+                        <option value="en">🇬🇧 English</option>
+                    </select>
+                </div>
+            </div>
+            <div class="settings-section">
+                <h4>🔐 Xavfsizlik</h4>
+                <div class="form-group"><label>Joriy parol:</label><input type="password" id="currentPassword" placeholder="Joriy parol"></div>
+                <div class="form-group"><label>Yangi parol:</label><input type="password" id="newPassword" placeholder="Yangi parol"></div>
+                <div class="form-group"><label>Yangi parol (takror):</label><input type="password" id="confirmPassword" placeholder="Yangi parolni takrorlang"></div>
+                <button class="btn-add" onclick="changePassword()">Parolni o'zgartirish</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="modal" class="modal">
+    <div class="modal-content">
+        <h2 id="modalTitle"></h2>
+        <div id="modalBody"></div>
+        <div style="margin-top: 20px;">
+            <button onclick="saveData()" style="background:#27ae60; color:white;">💾 Saqlash</button>
+            <button onclick="closeModal()" style="background:#95a5a6; color:white;">❌ Bekor</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const API = 'http://localhost:3000/api';
+let editId = null;
+let modalType = '';
+let allScheduleData = [];
+
+function login() {
+    const u = document.getElementById('username').value;
+    const p = document.getElementById('password').value;
+    if (u === 'admin' && p === 'admin123') {
+        document.getElementById('loginContainer').style.display = 'none';
+        document.getElementById('mainContainer').style.display = 'block';
+        loadRooms();
+        loadTeachers();
+        loadSchedule();
+    } else {
+        document.getElementById('loginError').innerText = '❌ Xato!';
+    }
+}
+
+function logout() {
+    document.getElementById('loginContainer').style.display = 'block';
+    document.getElementById('mainContainer').style.display = 'none';
+}
+
+function getWeekStart() {
+    let week = document.getElementById('weekStart').value;
+    if (!week) {
+        let today = new Date();
+        let monday = new Date(today.setDate(today.getDate() - today.getDay() + 1));
+        week = monday.toISOString().split('T')[0];
+        document.getElementById('weekStart').value = week;
+    }
+    return week;
+}
+
+function showTab(tab) {
+    document.querySelectorAll('.tab-content').forEach(function(t) {
+        t.classList.remove('active');
+    });
+    document.getElementById(tab).classList.add('active');
+    document.querySelectorAll('.tab').forEach(function(t) {
+        t.classList.remove('active');
+    });
+    event.target.classList.add('active');
+}
+
+async function loadRooms() {
+    const res = await fetch(API + '/rooms');
+    const data = await res.json();
+    let html = '<table><thead> captured<th>ID</th><th>Xona</th><th>Amal</th></tr></thead><tbody>';
+    for (let i = 0; i < data.length; i++) {
+        html += '<tr><td>' + data[i].id + '</td><td>🏛️ ' + data[i].name + '</td><td><button class="btn-edit" onclick="editRoom(' + data[i].id + ')">✏️</button> <button class="btn-delete" onclick="deleteRoom(' + data[i].id + ')">🗑️</button></td></tr>';
+    }
+    html += '</tbody></table>';
+    document.getElementById('roomsList').innerHTML = html;
+}
+
+async function loadTeachers() {
+    const res = await fetch(API + '/teachers');
+    const data = await res.json();
+    let html = '<table><thead><tr><th>ID</th><th>FIO</th><th>Telefon</th><th>Telegram ID</th><th>Amal</th></tr></thead><tbody>';
+    for (let i = 0; i < data.length; i++) {
+        html += '<tr><td>' + data[i].id + '</td><td>👨‍🏫 ' + data[i].full_name + '</td><td>📱 ' + (data[i].phone || '-') + '</td><td>💬 ' + (data[i].telegram_id || '-') + '</td><td><button class="btn-edit" onclick="editTeacher(' + data[i].id + ')">✏️</button> <button class="btn-delete" onclick="deleteTeacher(' + data[i].id + ')">🗑️</button> <button class="btn-sms" onclick="sendSingleMessage(' + data[i].id + ', \'' + data[i].full_name + '\')">📨</button></td></tr>';
+    }
+    html += '</tbody></table>';
+    document.getElementById('teachersList').innerHTML = html;
+}
+
+async function loadSchedule() {
+    const week = getWeekStart();
+    const res = await fetch(API + '/schedule?week_start=' + week);
+    const data = await res.json();
+    allScheduleData = data;
+    const days = ['Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba', 'Yakshanba'];
+    let html = '<table><thead><tr><th>Kun</th><th>Vaqt</th><th>Xona</th><th>O\'qituvchi</th><th>Telefon</th><th>Xabar</th><th>Amal</th></tr></thead><tbody>';
+    for (let i = 0; i < data.length; i++) {
+        let s = data[i];
+        let status = (s.notification_status === 'sent') ? '<span class="status-sent">✅ Yuborilgan</span>' : '<span class="status-pending">⏳ Yuborilmagan</span>';
+        html += '<tr><td>' + days[s.day_of_week - 1] + '</td><td>' + s.start_time + ' - ' + s.end_time + '</td><td>🏛️ ' + s.room_name + '</td><td>👨‍🏫 ' + s.teacher_name + '</td><td>📱 ' + (s.phone || '-') + '</td><td>' + status + '</td><td><button class="btn-edit" onclick="editSchedule(' + s.id + ')">✏️</button> <button class="btn-delete" onclick="deleteSchedule(' + s.id + ')">🗑️</button> <button class="btn-sms" onclick="sendSingleMessage(' + s.teacher_id + ', \'' + s.teacher_name + '\')">📨</button></td></tr>';
+    }
+    html += '</tbody></table>';
+    document.getElementById('scheduleList').innerHTML = html || '<p>Jadval bo\'sh</p>';
+}
+
+function showModal(type) {
+    modalType = type;
+    editId = null;
+    let html = '';
+    if (type === 'room') {
+        html = '<label>Xona nomi:</label><input type="text" id="name" placeholder="101-laboratoriya" style="width:100%; padding:8px; margin-top:5px; margin-bottom:15px;">';
+    } else if (type === 'teacher') {
+        html = '<label>FIO:</label><input type="text" id="name" style="width:100%; padding:8px; margin-top:5px; margin-bottom:15px;"><label>Telefon:</label><input type="text" id="phone" style="width:100%; padding:8px; margin-top:5px; margin-bottom:15px;"><label>Telegram ID:</label><input type="text" id="telegram_id" placeholder="123456789" style="width:100%; padding:8px; margin-top:5px; margin-bottom:15px;">';
+    } else if (type === 'schedule') {
+        html = '<label>Kun:</label><select id="day" style="width:100%; padding:8px; margin-top:5px; margin-bottom:15px;"><option value="1">Dushanba</option><option value="2">Seshanba</option><option value="3">Chorshanba</option><option value="4">Payshanba</option><option value="5">Juma</option><option value="6">Shanba</option><option value="7">Yakshanba</option></select>';
+        html += '<label>Boshlanish vaqti:</label><input type="time" id="start" style="width:100%; padding:8px; margin-top:5px; margin-bottom:15px;">';
+        html += '<label>Tugash vaqti:</label><input type="time" id="end" style="width:100%; padding:8px; margin-top:5px; margin-bottom:15px;">';
+        html += '<label>Xona:</label><select id="roomId" style="width:100%; padding:8px; margin-top:5px; margin-bottom:15px;"></select>';
+        html += '<label>O\'qituvchi:</label><select id="teacherId" style="width:100%; padding:8px; margin-top:5px; margin-bottom:15px;"></select>';
+        html += '<label>Hafta boshlanishi:</label><input type="date" id="week" value="' + getWeekStart() + '" style="width:100%; padding:8px; margin-top:5px; margin-bottom:15px;">';
+        loadSelects();
+    }
+    document.getElementById('modalBody').innerHTML = html;
+    document.getElementById('modalTitle').innerHTML = '➕ Yangi qo\'shish';
+    document.getElementById('modal').style.display = 'flex';
+}
+
+async function loadSelects() {
+    try {
+        const rooms = await fetch(API + '/rooms').then(function(r) { return r.json(); });
+        const teachers = await fetch(API + '/teachers').then(function(r) { return r.json(); });
+        
+        let roomSelect = document.getElementById('roomId');
+        let teacherSelect = document.getElementById('teacherId');
+        
+        if (roomSelect) {
+            roomSelect.innerHTML = '';
+            for (let i = 0; i < rooms.length; i++) {
+                roomSelect.innerHTML += '<option value="' + rooms[i].id + '">' + rooms[i].name + '</option>';
+            }
+        }
+        
+        if (teacherSelect) {
+            teacherSelect.innerHTML = '';
+            for (let i = 0; i < teachers.length; i++) {
+                teacherSelect.innerHTML += '<option value="' + teachers[i].id + '">' + teachers[i].full_name + '</option>';
+            }
+        }
+    } catch(e) {
+        console.error('loadSelects xatolik:', e);
+    }
+}
+
+async function saveData() {
+    if (modalType === 'room') {
+        await fetch(API + '/rooms', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({name: document.getElementById('name').value})
+        });
+        loadRooms();
+    } else if (modalType === 'teacher') {
+        await fetch(API + '/teachers', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                full_name: document.getElementById('name').value,
+                phone: document.getElementById('phone').value,
+                telegram_id: document.getElementById('telegram_id').value
+            })
+        });
+        loadTeachers();
+    } else if (modalType === 'schedule') {
+        const data = {
+            room_id: document.getElementById('roomId').value,
+            teacher_id: document.getElementById('teacherId').value,
+            day_of_week: document.getElementById('day').value,
+            start_time: document.getElementById('start').value,
+            end_time: document.getElementById('end').value,
+            week_start_date: document.getElementById('week').value
+        };
+        if (editId) {
+            await fetch(API + '/schedule/' + editId, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+        } else {
+            await fetch(API + '/schedule', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+        }
+        loadSchedule();
+    }
+    closeModal();
+}
+
+async function editSchedule(id) {
+    const item = allScheduleData.find(function(s) { return s.id === id; });
+    if (!item) {
+        alert('Ma\'lumot topilmadi!');
+        return;
+    }
+    modalType = 'schedule';
+    editId = id;
+    
+    // Modal oyna uchun HTML yaratish
+    let html = '<label>Kun:</label><select id="day" style="width:100%; padding:8px; margin-top:5px; margin-bottom:15px;"><option value="1">Dushanba</option><option value="2">Seshanba</option><option value="3">Chorshanba</option><option value="4">Payshanba</option><option value="5">Juma</option><option value="6">Shanba</option><option value="7">Yakshanba</option></select>';
+    html += '<label>Boshlanish vaqti:</label><input type="time" id="start" style="width:100%; padding:8px; margin-top:5px; margin-bottom:15px;" value="' + item.start_time + '">';
+    html += '<label>Tugash vaqti:</label><input type="time" id="end" style="width:100%; padding:8px; margin-top:5px; margin-bottom:15px;" value="' + item.end_time + '">';
+    html += '<label>Xona:</label><select id="roomId" style="width:100%; padding:8px; margin-top:5px; margin-bottom:15px;"></select>';
+    html += '<label>O\'qituvchi:</label><select id="teacherId" style="width:100%; padding:8px; margin-top:5px; margin-bottom:15px;"></select>';
+    html += '<label>Hafta boshlanishi:</label><input type="date" id="week" style="width:100%; padding:8px; margin-top:5px; margin-bottom:15px;" value="' + item.week_start_date + '">';
+    
+    document.getElementById('modalBody').innerHTML = html;
+    document.getElementById('modalTitle').innerHTML = '✏️ Jadval yozuvini tahrirlash';
+    
+    // Selectlarni to'ldirish
+    try {
+        const rooms = await fetch(API + '/rooms').then(function(r) { return r.json(); });
+        const teachers = await fetch(API + '/teachers').then(function(r) { return r.json(); });
+        
+        let roomSelect = document.getElementById('roomId');
+        let teacherSelect = document.getElementById('teacherId');
+        
+        if (roomSelect) {
+            roomSelect.innerHTML = '';
+            for (let i = 0; i < rooms.length; i++) {
+                let selected = (rooms[i].id == item.room_id) ? 'selected' : '';
+                roomSelect.innerHTML += '<option value="' + rooms[i].id + '" ' + selected + '>' + rooms[i].name + '</option>';
+            }
+        }
+        
+        if (teacherSelect) {
+            teacherSelect.innerHTML = '';
+            for (let i = 0; i < teachers.length; i++) {
+                let selected = (teachers[i].id == item.teacher_id) ? 'selected' : '';
+                teacherSelect.innerHTML += '<option value="' + teachers[i].id + '" ' + selected + '>' + teachers[i].full_name + '</option>';
+            }
+        }
+    } catch(e) {
+        console.error('loadSelects xatolik:', e);
+    }
+    
+    document.getElementById('modal').style.display = 'flex';
+}
+
+async function deleteSchedule(id) {
+    if (confirm('⚠️ Ushbu yozuvni o\'chirilsinmi?')) {
+        await fetch(API + '/schedule/' + id, {method: 'DELETE'});
+        loadSchedule();
+        alert('✅ Yozuv o\'chirildi!');
+    }
+}
+
+async function editRoom(id) {
+    const res = await fetch(API + '/rooms');
+    const data = await res.json();
+    const item = data.find(function(r) { return r.id === id; });
+    modalType = 'room';
+    editId = id;
+    document.getElementById('modalBody').innerHTML = '<label>Xona nomi:</label><input type="text" id="name" value="' + item.name + '" style="width:100%; padding:8px; margin-top:5px; margin-bottom:15px;">';
+    document.getElementById('modalTitle').innerHTML = '✏️ Xonani tahrirlash';
+    document.getElementById('modal').style.display = 'flex';
+}
+
+async function deleteRoom(id) {
+    if (confirm('⚠️ Ushbu xonani o\'chirilsinmi?')) {
+        await fetch(API + '/rooms/' + id, {method: 'DELETE'});
+        loadRooms();
+        alert('✅ Xona o\'chirildi!');
+    }
+}
+
+async function editTeacher(id) {
+    const res = await fetch(API + '/teachers');
+    const data = await res.json();
+    const item = data.find(function(t) { return t.id === id; });
+    modalType = 'teacher';
+    editId = id;
+    document.getElementById('modalBody').innerHTML = '<label>FIO:</label><input type="text" id="name" value="' + item.full_name + '" style="width:100%; padding:8px; margin-top:5px; margin-bottom:15px;"><label>Telefon:</label><input type="text" id="phone" value="' + item.phone + '" style="width:100%; padding:8px; margin-top:5px; margin-bottom:15px;"><label>Telegram ID:</label><input type="text" id="telegram_id" value="' + (item.telegram_id || '') + '" style="width:100%; padding:8px; margin-top:5px; margin-bottom:15px;">';
+    document.getElementById('modalTitle').innerHTML = '✏️ O\'qituvchini tahrirlash';
+    document.getElementById('modal').style.display = 'flex';
+}
+
+async function deleteTeacher(id) {
+    if (confirm('⚠️ Ushbu o\'qituvchini o\'chirilsinmi?')) {
+        await fetch(API + '/teachers/' + id, {method: 'DELETE'});
+        loadTeachers();
+        alert('✅ O\'qituvchi o\'chirildi!');
+    }
+}
+
+async function copyWeek() {
+    let from = prompt('Qaysi haftadan nusxalansin? (YYYY-MM-DD)');
+    let to = getWeekStart();
+    if (from && to) {
+        await fetch(API + '/schedule/copy-week', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({from_week: from, to_week: to})
+        });
+        loadSchedule();
+        alert('✅ Jadval nusxalandi!');
+    }
+}
+
+async function sendSingleMessage(id, name) {
+    let msg = prompt('Xabar matnini kiriting (' + name + ' uchun):', 'Hurmatli ' + name + ', Simulyatsion markazida darsingiz bor!');
+    if (msg) {
+        try {
+            const res = await fetch(API + '/send-message', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({teacherId: id, message: msg})
+            });
+            const result = await res.json();
+            if (result.success) {
+                alert('✅ Xabar yuborildi (' + result.method + ')');
+            } else {
+                alert('❌ Xatolik: ' + result.message);
+            }
+        } catch(e) {
+            alert('❌ Xatolik: Server bilan bog\'lanishda muammo');
+        }
+    }
+}
+
+async function sendAllMessages() {
+    if (confirm('Bugungi barcha o\'qituvchilarga xabar yuborilsinmi?')) {
+        const res = await fetch(API + '/send-all-messages', {method: 'POST'});
+        const data = await res.json();
+        alert('✅ ' + data.count + '/' + data.total + ' ta xabar yuborildi!');
+        loadSchedule();
+    }
+}
+
+async function changePassword() {
+    const current = document.getElementById('currentPassword').value;
+    const newPass = document.getElementById('newPassword').value;
+    const confirm = document.getElementById('confirmPassword').value;
+    if (newPass !== confirm) {
+        alert('❌ Yangi parollar mos kelmadi!');
+        return;
+    }
+    const res = await fetch(API + '/change-password', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({username: 'admin', currentPassword: current, newPassword: newPass})
+    });
+    const data = await res.json();
+    alert(data.success ? '✅ Parol o\'zgartirildi!' : '❌ Joriy parol xato!');
+}
+
+function changeLanguage() {
+    const lang = document.getElementById('languageSelect').value;
+    localStorage.setItem('language', lang);
+    alert('Til o\'zgartirildi! Sahifani yangilang.');
+}
+
+function closeModal() {
+    document.getElementById('modal').style.display = 'none';
+}
+</script>
+</body>
+</html>
