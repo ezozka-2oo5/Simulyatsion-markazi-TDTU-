@@ -179,6 +179,11 @@ setTimeout(() => {
     }
 }, 2000);
 
+// ============ ASOSIY YO'NALISH (ROOT) ============
+app.get('/', (req, res) => {
+    res.sendFile(__dirname + '/public/admin.html');
+});
+
 // ============ API ============
 app.post('/api/login', async (req, res) => {
     const { username, password, role } = req.body;
